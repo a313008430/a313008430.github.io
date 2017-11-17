@@ -1,6 +1,6 @@
-
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta charset="UTF-8">
     <title>XiaDD</title>
@@ -11,42 +11,23 @@
 
     </style>
 </head>
-<body> 
-<div class="columns">
-  <div class="column">
-        <div class="notification is-primary has-text-centered">
-          <p class="title">1</p>
+
+<body>
+    <section class="section">
+        <div class="container">
+            <h1 class="title">
+                Hello World
+            </h1>
+            <p class="subtitle">
+                My first website with
+                <strong>Bulma</strong>!
+            </p>
         </div>
-      </div>
-      <div class="column">
-        <div class="notification is-info has-text-centered">
-          <p class="title">2</p>
-        </div>
-      </div>
-      <div class="column">
-        <div class="notification is-success has-text-centered">
-          <p class="title">3</p>
-        </div>
-      </div>
-      <div class="column">
-        <div class="notification is-warning has-text-centered">
-          <p class="title">4</p>
-        </div>
-      </div>
-      <div class="column">
-        <div class="notification is-danger has-text-centered">
-          <p class="title">5</p>
-        </div>
-      </div>
-</div>
-    <pre><code data-language="javascript">addEventListener('load', function() {
-  var code = document.querySelector('#code');
-  var worker = new Worker('worker.js');
-  worker.onmessage = function(event) { code.innerHTML = event.data; }
-  worker.postMessage(code.textContent);
-})</code></pre>
-<script src="https://cdn.bootcss.com/rainbow/1.2.0/js/rainbow.min.js"></script>
-<script src="https://cdn.bootcss.com/rainbow/1.2.0/js/language/generic.min.js"></script>
-<script src="https://cdn.bootcss.com/rainbow/1.2.0/js/language/javascript.min.js"></script>
+    </section>
+    <pre><code data-language="javascript">console.log('Hellow World!')</code></pre>
+    <script src="https://cdn.bootcss.com/rainbow/1.2.0/js/rainbow.min.js"></script>
+    <script src="https://cdn.bootcss.com/rainbow/1.2.0/js/language/generic.min.js"></script>
+    <script src="https://cdn.bootcss.com/rainbow/1.2.0/js/language/javascript.min.js"></script>
 </body>
+
 </html>
