@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>XiaDD</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+    <link rel="shortcut icon" href="https://bulma.io/favicons/favicon.ico?v=201701041855">
+    <link href="https://cdn.bootcss.com/bulma/0.6.1/css/bulma.min.css" rel="stylesheet">
+    <link href="https://cdn.bootcss.com/rainbow/1.2.0/themes/monokai.min.css" rel="stylesheet">
+    <style>
+        html,
+        body {
+            background-color: #FFFBE8;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="hero is-fullheight is-primary is-bold">
+        <div class="hero-body">
+            <div class="container has-text-centered">
+                <h1 class="title">
+                    Hello Boy!
+                </h1>
+                <h2 class="subtitle">
+                    就是写一写备忘录！
+                </h2>
+            </div>
+        </div>
+   
+   <div class="hero-foot">
+    <nav class="navbar is-dark">
+        <div class="navbar-brand">
+            <div class="navbar-burger burger is-active" data-target="navMenu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+
+        </div>
+        <div class="navbar-menu is-active" id="navMenu">
+            <div class="navbar-start">
+                <a href="#" class="navbar-item is-active">Home</a>
+                <a href="#" class="navbar-item">Javascript</a>
+            </div>
+        </div>
+
+    </nav>
+   </div>
+</div>
+
+    <!-- <pre><code data-language="javascript">console.log('Hellow World!')</code></pre> -->
+    <script src="https://cdn.bootcss.com/rainbow/1.2.0/js/rainbow.min.js"></script>
+    <script src="https://cdn.bootcss.com/rainbow/1.2.0/js/language/generic.min.js"></script>
+    <script src="https://cdn.bootcss.com/rainbow/1.2.0/js/language/javascript.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+
+            // Get all "navbar-burger" elements
+            var $navbarBurgers = Array.prototype.slice.call(document.querySelectorAll('.navbar-burger'), 0);
+
+            // Check if there are any navbar burgers
+            if ($navbarBurgers.length > 0) {
+
+                // Add a click event on each of them
+                $navbarBurgers.forEach(function ($el) {
+                    $el.addEventListener('click', function () {
+
+                        // Get the target from the "data-target" attribute
+                        var target = $el.dataset.target;
+                        var $target = document.getElementById(target);
+
+                        // Toggle the class on both the "navbar-burger" and the "navbar-menu"
+                        $el.classList.toggle('is-active');
+                        $target.classList.toggle('is-active');
+
+                    });
+                });
+            }
+
+        });
+    </script>
+</body>
+
+</html>
