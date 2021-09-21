@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>关于audio重新播放问题</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+    <link rel="shortcut icon" href="https://bulma.io/favicons/favicon.ico?v=201701041855">
+    <link href="https://cdn.bootcss.com/bulma/0.6.1/css/bulma.min.css" rel="stylesheet">
+    <link href="https://cdn.bootcss.com/rainbow/1.2.0/themes/monokai.min.css" rel="stylesheet">
+    <style>
+        html,
+        body {
+            background-color: #FFFBE8;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar is-dark">
+        <div class="navbar-brand">
+            <div class="navbar-burger burger is-active" data-target="navMenu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+
+        </div>
+        <div class="navbar-menu is-active" id="navMenu">
+            <div class="navbar-start">
+                <a href="/" class="navbar-item">Home</a>
+                <a href="../js-list.html" class="navbar-item is-active">Javascript</a>
+                <a href="#" class="navbar-item is-active">Html5&nbsp;&nbsp;
+                    <span class="tag is-danger is-danger is-rounded ">1</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+    <div class="container section">
+        <div class="content">
+            <h1>关于audio重新播放问题</h1>
+            <hr>
+            <blockquote>新手比较容易入的坑，audio重新播放问题</blockquote>
+            <p>用JS方法生成</p>
+            <h2>DEMO
+                <span class="tag is-light">1</span>
+            </h2>
+            <pre><code data-language="javascript">var audio;
+if (!audio){
+    audio = new Audio();
+    audio.src = 'https://niudan.leshu.com/public/miusic/v2-gacha-sound.lite.mp3';
+    //canplaythrough这个事件在手机上流媒体要一边播放才能监听得到，pc端chrome可以完美支持
+    audio.addEventListener("canplaythrough", function () {
+        // audio.play();
+        audio.volume = 1;
+        //我们发现播放完之后这里执行了
+        console.log("加载完成！");
+    }, false);
+    audio.addEventListener("error", function () {
+        console.log("加载失败！");
+    }, false);
+// audio.load();
+// audio.play();
+}
+</code></pre>
+            <p>把上面代码加入到一个需要触发的方法里面用来初始化加载音频文件！</p>
+            <p><strong>会犯的一个错误就是，如果要重新播放的话，刚开始我用的是<code>audio.load();</code>让音频文件重新加载，这样做在电脑上面，或是一般手机上面也都没有问题，但是在微信里面，有时候会导致第一次无法播放音频的问题，并且还会有延迟的问题！</strong></p>
+            <p>所以重新播放请用以下代码</p>
+            <pre><code data-language="javascript">audio.currentTime = 0;//把当前播放声音重置为0</code></pre>
+            <p>文件已经加载完成，如果需要重新播放，只需要把当前的播放时间重新为0就可以了，<strong>这个问题很难测，正常的思路也应该是这样的，给新手用</strong></p>
+           
+            <h2>DEMO
+                <span class="tag is-light">1</span>
+            </h2>
+            <p>上面的代码是通过new一个新的音频事件对象，还有一种是在界面里面添加html代码，但是会有问题，特别是监听加载完成
+                <strong>暂时确定解决方案了，后面的后期再补上吧</strong>
+            </p>
+            <pre><code  data-language="javascript"><audio preload="auto" controls style="display:none" src="<?=$config['pub_url'];?>miusic/v2-gacha-sound.lite.mp3" id="turnSound"></audio></code></pre>
+          
+        </div>
+    </div>
+
+
+    <script src="https://cdn.bootcss.com/rainbow/1.2.0/js/rainbow.min.js"></script>
+    <script src="https://cdn.bootcss.com/rainbow/1.2.0/js/language/generic.min.js"></script>
+    <script src="https://cdn.bootcss.com/rainbow/1.2.0/js/language/javascript.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+
+            // Get all "navbar-burger" elements
+            var $navbarBurgers = Array.prototype.slice.call(document.querySelectorAll('.navbar-burger'), 0);
+
+            // Check if there are any navbar burgers
+            if ($navbarBurgers.length > 0) {
+
+                // Add a click event on each of them
+                $navbarBurgers.forEach(function ($el) {
+                    $el.addEventListener('click', function () {
+
+                        // Get the target from the "data-target" attribute
+                        var target = $el.dataset.target;
+                        var $target = document.getElementById(target);
+
+                        // Toggle the class on both the "navbar-burger" and the "navbar-menu"
+                        $el.classList.toggle('is-active');
+                        $target.classList.toggle('is-active');
+
+                    });
+                });
+            }
+
+        });
+    </script>
+</body>
+
+</html>
