@@ -1,0 +1,1255 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Session JSON Converter</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f6f7f9;
+      --panel: #ffffff;
+      --text: #18212f;
+      --muted: #657083;
+      --line: #d8dde6;
+      --accent: #0f766e;
+      --accent-strong: #0b5f59;
+      --danger-bg: #fff4e5;
+      --danger-line: #f0ba6b;
+      --danger-text: #7a4b08;
+      --code-bg: #101827;
+      --code-text: #e9eef8;
+      --radius: 8px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Arial, "Microsoft YaHei", sans-serif;
+      font-size: 15px;
+      line-height: 1.5;
+    }
+
+    main {
+      width: min(1180px, calc(100vw - 32px));
+      margin: 24px auto;
+    }
+
+    header {
+      margin-bottom: 16px;
+    }
+
+    h1 {
+      margin: 0 0 6px;
+      font-size: 28px;
+      line-height: 1.2;
+      letter-spacing: 0;
+    }
+
+    p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .notice {
+      margin: 16px 0;
+      padding: 12px 14px;
+      border: 1px solid var(--danger-line);
+      border-radius: var(--radius);
+      background: var(--danger-bg);
+      color: var(--danger-text);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 16px;
+    }
+
+    .panel h2 {
+      margin: 0 0 12px;
+      font-size: 18px;
+      line-height: 1.3;
+    }
+
+    label {
+      display: block;
+      margin: 12px 0 6px;
+      font-weight: 700;
+    }
+
+    textarea,
+    input {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fff;
+      color: var(--text);
+      font: inherit;
+    }
+
+    textarea {
+      min-height: 430px;
+      padding: 12px;
+      resize: vertical;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .source-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .source-item {
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #f8fafc;
+    }
+
+    .source-item label {
+      margin: 0 0 6px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .source-input {
+      height: 60px;
+      min-height: 60px;
+      background: #fff;
+    }
+
+    input[type="number"],
+    input[type="text"] {
+      height: 38px;
+      padding: 8px 10px;
+    }
+
+    input[type="file"] {
+      padding: 8px;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .segmented {
+      display: inline-grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px;
+      padding: 4px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #eef1f5;
+    }
+
+    .segmented label {
+      margin: 0;
+      font-weight: 700;
+    }
+
+    .segmented input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .segmented span {
+      display: block;
+      min-width: 120px;
+      padding: 8px 10px;
+      border-radius: 6px;
+      text-align: center;
+      cursor: pointer;
+      color: var(--muted);
+    }
+
+    .segmented input:checked + span {
+      background: var(--panel);
+      color: var(--text);
+      box-shadow: 0 1px 3px rgba(24, 33, 47, 0.12);
+    }
+
+    .checks {
+      display: flex;
+      gap: 18px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+
+    .checks label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0;
+      font-weight: 400;
+    }
+
+    .checks input {
+      width: 16px;
+      height: 16px;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+
+    .top-actions {
+      margin: 16px 0;
+    }
+
+    .top-settings {
+      display: grid;
+      grid-template-columns: auto auto 1fr auto;
+      gap: 12px;
+      align-items: end;
+      margin: 16px 0;
+    }
+
+    .top-settings label {
+      margin-top: 0;
+    }
+
+    .top-settings .actions {
+      margin-top: 0;
+      justify-content: flex-end;
+    }
+
+    .session-actions {
+      margin: 0 0 12px;
+    }
+
+    button {
+      height: 38px;
+      padding: 0 14px;
+      border: 1px solid transparent;
+      border-radius: var(--radius);
+      background: var(--accent);
+      color: #fff;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: var(--accent-strong);
+    }
+
+    button.secondary {
+      border-color: var(--line);
+      background: #fff;
+      color: var(--text);
+    }
+
+    button.secondary:hover {
+      background: #eef1f5;
+    }
+
+    .status {
+      min-height: 22px;
+      margin-top: 10px;
+      color: var(--muted);
+    }
+
+    .status.error {
+      color: #b42318;
+      font-weight: 700;
+    }
+
+    .filename {
+      margin: 10px 0;
+      padding: 8px 10px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #f8fafc;
+      color: var(--text);
+      overflow-wrap: anywhere;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 13px;
+    }
+
+    .output {
+      min-height: 520px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .output-textarea,
+    .preview-file-body {
+      width: 100%;
+      border: 1px solid #253349;
+      border-radius: var(--radius);
+      background: var(--code-bg);
+      color: var(--code-text);
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .output-textarea {
+      min-height: 520px;
+    }
+
+    .preview-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .preview-item {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #f8fafc;
+      overflow: hidden;
+    }
+
+    .preview-filename {
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--line);
+      background: #fff;
+      overflow-wrap: anywhere;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 13px;
+    }
+
+    .preview-file-body {
+      min-height: 180px;
+      border: 0;
+      border-radius: 0;
+      resize: vertical;
+    }
+
+    @media (max-width: 880px) {
+      main {
+        width: min(100vw - 20px, 720px);
+        margin: 16px auto;
+      }
+
+      .layout,
+      .controls,
+      .top-settings {
+        grid-template-columns: 1fr;
+      }
+
+      textarea {
+        min-height: 300px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Session JSON Converter</h1>
+      <p>默认生成 sub2api 导入 JSON，也可以切换成 CPA token JSON。</p>
+    </header>
+
+    <div class="notice">
+      这些数据很敏感。页面只在本地浏览器里转换，不会上传。不要把输出内容发给别人。
+    </div>
+
+    <div class="top-settings">
+      <div>
+        <label>输出格式</label>
+        <div class="segmented" role="radiogroup" aria-label="输出格式">
+          <label>
+            <input type="radio" name="format" value="sub2api" checked>
+            <span>sub2api</span>
+          </label>
+          <label>
+            <input type="radio" name="format" value="cpa">
+            <span>CPA</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="checks">
+        <label>
+          <input id="keepPlusTag" type="checkbox">
+          保留邮箱 +tag
+        </label>
+        <label>
+          <input id="autoPause" type="checkbox" checked>
+          过期自动暂停
+        </label>
+      </div>
+
+      <div>
+        <label for="models">模型列表</label>
+        <input id="models" type="text" value="codex-auto-review,gpt-5.4,gpt-5.4-mini,gpt-5.5,gpt-image-2">
+      </div>
+
+      <div class="actions">
+        <button id="copyButton" type="button">复制</button>
+        <button id="downloadButton" class="secondary" type="button">下载 JSON</button>
+      </div>
+    </div>
+
+    <div class="controls top-actions">
+      <div>
+        <label for="concurrency">并发数</label>
+        <input id="concurrency" type="number" min="1" step="1" value="10">
+      </div>
+      <div>
+        <label for="priority">优先级</label>
+        <input id="priority" type="number" min="0" step="1" value="1">
+      </div>
+      <div>
+        <label for="rateMultiplier">倍率</label>
+        <input id="rateMultiplier" type="number" min="0" step="0.1" value="1">
+      </div>
+    </div>
+
+    <div class="layout">
+      <section class="panel">
+        <h2>输入</h2>
+        <div class="actions session-actions">
+          <button id="addSourceButton" class="secondary" type="button">添加</button>
+          <button id="clearButton" class="secondary" type="button">清空</button>
+        </div>
+        <div id="sourceList" class="source-list"></div>
+
+        <label for="fileInput">选择 JSON 文件</label>
+        <input id="fileInput" type="file" accept="application/json,.json" multiple>
+
+        <div id="status" class="status" role="status"></div>
+      </section>
+
+      <section class="panel">
+        <h2>输出</h2>
+        <div id="filename" class="filename">等待生成</div>
+        <div id="output" class="output"></div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    const sourceList = document.querySelector('#sourceList');
+    const addSourceButton = document.querySelector('#addSourceButton');
+    const fileInput = document.querySelector('#fileInput');
+    const output = document.querySelector('#output');
+    const filenameView = document.querySelector('#filename');
+    const statusView = document.querySelector('#status');
+    const clearButton = document.querySelector('#clearButton');
+    const copyButton = document.querySelector('#copyButton');
+    const downloadButton = document.querySelector('#downloadButton');
+    const keepPlusTag = document.querySelector('#keepPlusTag');
+    const autoPause = document.querySelector('#autoPause');
+    const concurrency = document.querySelector('#concurrency');
+    const priority = document.querySelector('#priority');
+    const rateMultiplier = document.querySelector('#rateMultiplier');
+    const models = document.querySelector('#models');
+
+    const textEncoder = new TextEncoder();
+    const textDecoder = new TextDecoder();
+    const sourcePlaceholder = '{"user":{"email":"..."},"account":{"planType":"plus"},"accessToken":"...","sessionToken":"..."}';
+    let latestResult = null;
+    let latestOutputText = '';
+    let autoConvertTimer = 0;
+
+    function setStatus(message, isError = false) {
+      statusView.textContent = message;
+      statusView.classList.toggle('error', isError);
+    }
+
+    function sourceInputs() {
+      return Array.from(sourceList.querySelectorAll('.source-input'));
+    }
+
+    function updateSourceLabels() {
+      Array.from(sourceList.children).forEach((item, index) => {
+        const label = item.querySelector('label');
+        label.textContent = `Session ${index + 1}`;
+      });
+    }
+
+    function addSourceInput(value = '', place = 'end') {
+      const item = document.createElement('div');
+      const label = document.createElement('label');
+      const textarea = document.createElement('textarea');
+
+      item.className = 'source-item';
+      textarea.className = 'source-input';
+      textarea.spellcheck = false;
+      textarea.placeholder = sourcePlaceholder;
+      textarea.value = value;
+      textarea.addEventListener('input', scheduleAutoConvert);
+      item.append(label, textarea);
+
+      if (place === 'start') {
+        sourceList.prepend(item);
+      } else {
+        sourceList.append(item);
+      }
+
+      updateSourceLabels();
+      return textarea;
+    }
+
+    function resetSourceInputs() {
+      sourceList.textContent = '';
+      addSourceInput();
+    }
+
+    function addDocumentsToInputs(documents) {
+      const emptyInputs = sourceInputs().filter((input) => input.value.trim() === '');
+
+      documents.forEach((document) => {
+        const text = JSON.stringify(document, null, 2);
+        const input = emptyInputs.shift();
+
+        if (input) {
+          input.value = text;
+        } else {
+          addSourceInput(text);
+        }
+      });
+    }
+
+    function pickString(...values) {
+      for (const value of values) {
+        if (typeof value === 'string' && value.trim() !== '') {
+          return value.trim();
+        }
+      }
+      return '';
+    }
+
+    function splitList(value) {
+      return value.split(',').map((item) => item.trim()).filter(Boolean);
+    }
+
+    function decodeJwtPayload(token) {
+      if (!token || typeof token !== 'string' || !token.includes('.')) {
+        return {};
+      }
+
+      const payload = token.split('.')[1];
+      const normalized = payload.replace(/-/g, '+').replace(/_/g, '/');
+      const padded = normalized.padEnd(normalized.length + ((4 - (normalized.length % 4)) % 4), '=');
+
+      try {
+        const bytes = Uint8Array.from(atob(padded), (char) => char.charCodeAt(0));
+        return JSON.parse(textDecoder.decode(bytes));
+      } catch {
+        return {};
+      }
+    }
+
+    function encodeBase64UrlJson(value) {
+      const bytes = textEncoder.encode(JSON.stringify(value));
+      let binary = '';
+
+      for (const byte of bytes) {
+        binary += String.fromCharCode(byte);
+      }
+
+      return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+    }
+
+    function epochSecondsFromValue(value) {
+      if (!value) {
+        return 0;
+      }
+
+      const numeric = Number(value);
+      if (Number.isFinite(numeric)) {
+        return Math.trunc(numeric > 1e11 ? numeric / 1000 : numeric);
+      }
+
+      const parsed = Date.parse(String(value));
+      return Number.isFinite(parsed) ? Math.trunc(parsed / 1000) : 0;
+    }
+
+    function normalizeTimestamp(value) {
+      if (value instanceof Date && !Number.isNaN(value.getTime())) {
+        return value.toISOString();
+      }
+
+      if (typeof value === 'number' && Number.isFinite(value)) {
+        const milliseconds = value > 1e11 ? value : value * 1000;
+        const date = new Date(milliseconds);
+        return Number.isNaN(date.getTime()) ? '' : date.toISOString();
+      }
+
+      if (typeof value !== 'string' || value.trim() === '') {
+        return '';
+      }
+
+      const date = new Date(value);
+      return Number.isNaN(date.getTime()) ? '' : date.toISOString();
+    }
+
+    function timestampFromUnixSeconds(value) {
+      const numeric = Number(value);
+      if (!Number.isFinite(numeric)) {
+        return '';
+      }
+
+      const date = new Date(numeric * 1000);
+      return Number.isNaN(date.getTime()) ? '' : date.toISOString();
+    }
+
+    function getExpiresIn(expiresAt, now = new Date()) {
+      if (!expiresAt) {
+        return undefined;
+      }
+
+      const expiresMs = new Date(expiresAt).getTime();
+      if (Number.isNaN(expiresMs)) {
+        return undefined;
+      }
+
+      return Math.max(0, Math.floor((expiresMs - now.getTime()) / 1000));
+    }
+
+    function stripUnavailable(value) {
+      if (Array.isArray(value)) {
+        return value.map(stripUnavailable).filter((item) => item !== undefined);
+      }
+
+      if (isObject(value)) {
+        const entries = Object.entries(value)
+          .map(([key, item]) => [key, stripUnavailable(item)])
+          .filter(([, item]) => item !== undefined);
+        return entries.length ? Object.fromEntries(entries) : undefined;
+      }
+
+      if (value === undefined || value === null || value === '') {
+        return undefined;
+      }
+
+      return value;
+    }
+
+    function toEmailKey(email) {
+      if (typeof email !== 'string') {
+        return '';
+      }
+
+      return email
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '_')
+        .replace(/^_+|_+$/g, '');
+    }
+
+    function buildSyntheticCodexIdToken(email, accountId, planType, userId, expiresAt) {
+      if (!accountId) {
+        return '';
+      }
+
+      const now = Math.trunc(Date.now() / 1000);
+      const expires = epochSecondsFromValue(expiresAt) || now + 90 * 24 * 60 * 60;
+      const authInfo = {
+        chatgpt_account_id: accountId,
+      };
+
+      if (planType) {
+        authInfo.chatgpt_plan_type = planType;
+      }
+
+      if (userId) {
+        authInfo.chatgpt_user_id = userId;
+        authInfo.user_id = userId;
+      }
+
+      const payload = {
+        iat: now,
+        exp: expires,
+        'https://api.openai.com/auth': authInfo,
+      };
+
+      if (email) {
+        payload.email = email;
+      }
+
+      return `${encodeBase64UrlJson({ alg: 'none', typ: 'JWT', cpa_synthetic: true })}.${encodeBase64UrlJson(payload)}.`;
+    }
+
+    function stripPlusTag(email) {
+      const [local, domain] = email.split('@');
+
+      if (!local || !domain) {
+        return email;
+      }
+
+      return `${local.split('+')[0]}@${domain}`;
+    }
+
+    function sanitizeFilenamePart(value) {
+      return value.replace(/[<>:"/\\|?*\x00-\x1f]/g, '_');
+    }
+
+    function sub2apiFilenameFromToken(tokenFile) {
+      const email = sanitizeFilenamePart(tokenFile.email);
+      const planType = sanitizeFilenamePart(tokenFile.plan_type || tokenFile.chatgpt_plan_type || 'free');
+
+      return `sub2api-${email}-${planType}.json`;
+    }
+
+    function toUnixSeconds(value) {
+      if (!value) {
+        return null;
+      }
+
+      const ms = Date.parse(value);
+      return Number.isNaN(ms) ? null : Math.floor(ms / 1000);
+    }
+
+    function toModelMapping(modelList) {
+      return Object.fromEntries(modelList.map((model) => [model, model]));
+    }
+
+    function toCodexToken(source, options) {
+      const accessToken = pickString(
+        source.accessToken,
+        source.access_token,
+        source.token?.accessToken,
+        source.credentials?.access_token,
+      );
+      const sessionToken = pickString(
+        source.sessionToken,
+        source.session_token,
+        source.token?.sessionToken,
+        source.token?.session_token,
+        source.credentials?.session_token,
+      );
+      const refreshToken = pickString(
+        source.refreshToken,
+        source.refresh_token,
+        source.token?.refreshToken,
+        source.token?.refresh_token,
+        source.credentials?.refresh_token,
+      );
+      const inputIdToken = pickString(
+        source.idToken,
+        source.id_token,
+        source.token?.idToken,
+        source.token?.id_token,
+        source.credentials?.id_token,
+      );
+      const accessClaims = decodeJwtPayload(accessToken);
+      const idClaims = decodeJwtPayload(inputIdToken);
+      const authClaims = accessClaims['https://api.openai.com/auth'] || {};
+      const idAuthClaims = idClaims['https://api.openai.com/auth'] || {};
+      const profileClaims = accessClaims['https://api.openai.com/profile'] || {};
+
+      const email = pickString(source.user?.email, source.email, source.credentials?.email, profileClaims.email, idClaims.email, accessClaims.email);
+      const accountId = pickString(source.account?.id, source.account_id, source.credentials?.chatgpt_account_id, authClaims.chatgpt_account_id, idAuthClaims.chatgpt_account_id);
+      const userId = pickString(source.user?.id, source.user_id, authClaims.chatgpt_user_id, authClaims.user_id, idAuthClaims.chatgpt_user_id, idAuthClaims.user_id);
+      const planType = pickString(
+        source.account?.planType,
+        source.account?.plan_type,
+        source.plan_type,
+        source.credentials?.plan_type,
+        authClaims.chatgpt_plan_type,
+        idAuthClaims.chatgpt_plan_type,
+      );
+      const expired = pickString(
+        normalizeTimestamp(source.expires),
+        normalizeTimestamp(source.expired),
+        normalizeTimestamp(source.expires_at),
+        timestampFromUnixSeconds(accessClaims.exp),
+      );
+      const idToken = inputIdToken || buildSyntheticCodexIdToken(email, accountId, planType, userId, expired);
+      const exportedAt = normalizeTimestamp(options.now || new Date());
+
+      const missing = [];
+      if (!accessToken) missing.push('access_token');
+      if (!email) missing.push('user.email');
+      if (!accountId) missing.push('account.id');
+      if (!expired) missing.push('expires');
+
+      if (missing.length > 0) {
+        throw new Error(`缺少字段: ${missing.join(', ')}`);
+      }
+
+      return {
+        token: stripUnavailable({
+          type: 'codex',
+          account_id: accountId,
+          chatgpt_account_id: accountId,
+          email,
+          name: email,
+          plan_type: planType,
+          chatgpt_plan_type: planType,
+          id_token: idToken,
+          id_token_synthetic: inputIdToken ? undefined : true,
+          access_token: accessToken,
+          refresh_token: refreshToken,
+          session_token: sessionToken,
+          last_refresh: exportedAt,
+          expired,
+          disabled: Boolean(source.disabled) || undefined,
+        }),
+        filename: `cpa-${sanitizeFilenamePart(email)}-${sanitizeFilenamePart(planType || 'free')}.json`,
+      };
+    }
+
+    function toCpaSession(source, options) {
+      const accessToken = pickString(source.accessToken, source.access_token);
+      const sessionToken = pickString(source.sessionToken, source.session_token);
+      const accessClaims = decodeJwtPayload(accessToken);
+      const authClaims = accessClaims['https://api.openai.com/auth'] || {};
+      const profileClaims = accessClaims['https://api.openai.com/profile'] || {};
+
+      const email = pickString(source.user?.email, source.email, profileClaims.email);
+      const accountId = pickString(
+        source.account?.id,
+        source.account_id,
+        source.chatgpt_account_id,
+        authClaims.chatgpt_account_id,
+      );
+      const planType = pickString(
+        source.account?.planType,
+        source.plan_type,
+        source.chatgpt_plan_type,
+        authClaims.chatgpt_plan_type,
+        'free',
+      ).toLowerCase();
+      const userId = pickString(source.user?.id, authClaims.chatgpt_user_id, authClaims.user_id);
+      const expired = pickString(
+        source.expires,
+        source.expired,
+        accessClaims.exp ? new Date(accessClaims.exp * 1000).toISOString() : '',
+      );
+      const iat = Number(source.user?.iat || accessClaims.iat || Math.floor(Date.now() / 1000));
+
+      const missing = [];
+      if (!accessToken) missing.push('accessToken');
+      if (!sessionToken) missing.push('sessionToken');
+      if (!email) missing.push('user.email');
+      if (!accountId) missing.push('account.id');
+      if (!expired) missing.push('expires');
+
+      if (missing.length > 0) {
+        throw new Error(`缺少字段: ${missing.join(', ')}`);
+      }
+
+      return {
+        token: {
+          WARNING_BANNER: source.WARNING_BANNER || '!!!!!!!!!!!!!!!!!!!! DO NOT SHARE ANY PART OF THE INFORMATION YOU SEE HERE. THIS INFORMATION IS SENSITIVE AND CAN GRANT ACCESS TO YOUR ACCOUNT. SHARING THIS INFORMATION IS LIKE SHARING YOUR PASSWORD. !!!!!!!!!!!!!!!!!!!!',
+          user: {
+            id: userId,
+            name: source.user?.name || '',
+            email,
+            idp: source.user?.idp || 'auth0',
+            iat,
+            mfa: source.user?.mfa ?? false,
+          },
+          expires: expired,
+          account: {
+            id: accountId,
+            planType,
+            structure: source.account?.structure || 'personal',
+            isConversationClassifierEnabledForWorkspace: source.account?.isConversationClassifierEnabledForWorkspace ?? true,
+            isFinservEnabledWorkspace: source.account?.isFinservEnabledWorkspace ?? false,
+            isFedrampCompliantWorkspace: source.account?.isFedrampCompliantWorkspace ?? false,
+            isDelinquent: source.account?.isDelinquent ?? false,
+            residencyRegion: source.account?.residencyRegion || 'no_constraint',
+            computeResidency: source.account?.computeResidency || 'no_constraint',
+          },
+          accessToken,
+          authProvider: pickString(source.authProvider, source.type, 'openai'),
+          sessionToken,
+          rumViewTags: source.rumViewTags || {
+            light_account: {
+              fetched: false,
+            },
+          },
+        },
+        filename: `cpa-${sanitizeFilenamePart(email)}-${sanitizeFilenamePart(planType)}.json`,
+      };
+    }
+
+    function toSub2apiAccount(tokenFile, options) {
+      const accessClaims = decodeJwtPayload(tokenFile.access_token);
+      const idClaims = decodeJwtPayload(tokenFile.id_token);
+      const accessAuth = accessClaims['https://api.openai.com/auth'] || {};
+      const idAuth = idClaims['https://api.openai.com/auth'] || {};
+      const profile = accessClaims['https://api.openai.com/profile'] || {};
+      const email = pickString(tokenFile.email, profile.email, idClaims.email);
+      const planType = pickString(
+        tokenFile.chatgpt_plan_type,
+        tokenFile.plan_type,
+        accessAuth.chatgpt_plan_type,
+        idAuth.chatgpt_plan_type,
+      );
+
+      return stripUnavailable({
+        name: tokenFile.email,
+        platform: 'openai',
+        type: 'oauth',
+        concurrency: options.concurrency,
+        priority: options.priority,
+        credentials: {
+          access_token: pickString(tokenFile.access_token),
+          chatgpt_account_id: pickString(tokenFile.chatgpt_account_id, tokenFile.account_id, accessAuth.chatgpt_account_id),
+          chatgpt_user_id: pickString(accessAuth.chatgpt_user_id, accessAuth.user_id, idAuth.chatgpt_user_id, idAuth.user_id),
+          email,
+          expires_at: tokenFile.expired,
+          expires_in: getExpiresIn(tokenFile.expired, options.now || new Date()),
+          model_mapping: toModelMapping(options.models),
+          plan_type: planType,
+        },
+        extra: {
+          codex_image_generation_bridge: true,
+          email,
+          email_key: toEmailKey(email),
+          name: tokenFile.name,
+          auth_provider: pickString(tokenFile.auth_provider),
+          last_refresh: tokenFile.last_refresh,
+          openai_oauth_responses_websockets_v2_enabled: false,
+          openai_oauth_responses_websockets_v2_mode: 'off',
+          source: 'chatgpt_web_session',
+        },
+        rate_multiplier: options.rateMultiplier,
+        auto_pause_on_expired: options.autoPauseOnExpired,
+      });
+    }
+
+    function getOptions() {
+      return {
+        keepPlusTag: keepPlusTag.checked,
+        autoPauseOnExpired: autoPause.checked,
+        concurrency: Number(concurrency.value || 10),
+        priority: Number(priority.value || 1),
+        rateMultiplier: Number(rateMultiplier.value || 1),
+        models: splitList(models.value),
+      };
+    }
+
+    function selectedFormat() {
+      return document.querySelector('input[name="format"]:checked').value;
+    }
+
+    function isObject(value) {
+      return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+    }
+
+    function collectSessionObjects(value, sourceName = 'pasted-json') {
+      const found = [];
+
+      function visit(item, path) {
+        if (Array.isArray(item)) {
+          item.forEach((child, index) => visit(child, `${path}[${index}]`));
+          return;
+        }
+
+        if (!isObject(item)) {
+          return;
+        }
+
+        const token = pickString(item.accessToken, item.access_token, item.token?.accessToken, item.credentials?.access_token);
+        const hasUser = isObject(item.user) || pickString(item.email, item.name);
+        if (token && hasUser) {
+          found.push({ value: item, sourceName, path });
+          return;
+        }
+
+        for (const [key, child] of Object.entries(item)) {
+          if (key === 'accessToken' || key === 'access_token' || key === 'sessionToken' || key === 'session_token') {
+            continue;
+          }
+          visit(child, `${path}.${key}`);
+        }
+      }
+
+      visit(value, '$');
+      return found;
+    }
+
+    function collectInputSources() {
+      const sources = [];
+      const parseErrors = [];
+      let hasInput = false;
+
+      sourceInputs().forEach((input, index) => {
+        const raw = input.value.trim();
+
+        if (!raw) {
+          return;
+        }
+
+        hasInput = true;
+
+        try {
+          const source = JSON.parse(raw);
+          sources.push(...collectSessionObjects(source, `Session ${index + 1}`));
+        } catch (error) {
+          parseErrors.push(`Session ${index + 1}: JSON 解析失败: ${error.message}`);
+        }
+      });
+
+      if (parseErrors.length > 0) {
+        throw new Error(parseErrors.join('\n'));
+      }
+
+      if (!hasInput) {
+        throw new Error('请先输入 JSON。');
+      }
+
+      return sources;
+    }
+
+    function convertSources(sources, options) {
+      const converted = [];
+      const skipped = [];
+      const runOptions = {
+        ...options,
+        now: options.now || new Date(),
+      };
+
+      sources.forEach((source, index) => {
+        try {
+          const codex = toCodexToken(source.value, runOptions);
+          converted.push({
+            ...codex,
+            sourceName: source.sourceName || `account-${index + 1}`,
+            sourcePath: source.path || '$',
+          });
+        } catch (error) {
+          skipped.push(`${source.sourceName || 'input'} ${source.path || '$'}: ${error.message}`);
+        }
+      });
+
+      if (converted.length === 0) {
+        const reason = skipped.length ? skipped.join('\n') : '未找到包含 accessToken 和 user/email 的 session 对象。';
+        throw new Error(reason);
+      }
+
+      return { converted, skipped, options: runOptions };
+    }
+
+    function buildSub2apiFile(accounts, now = new Date()) {
+      return {
+        exported_at: normalizeTimestamp(now),
+        proxies: [],
+        accounts,
+      };
+    }
+
+    function buildOutput(converted, skipped, options) {
+      const format = selectedFormat();
+
+      if (format === 'cpa') {
+        const files = converted.map((item) => ({
+          filename: item.filename,
+          data: item.token,
+        }));
+
+        return {
+          filename: converted.length === 1 ? files[0].filename : `${converted.length} 个独立 CPA JSON 文件`,
+          files,
+          count: converted.length,
+          skipped,
+        };
+      }
+
+      const filename = converted.length === 1 ? sub2apiFilenameFromToken(converted[0].token) : `sub2api-accounts-${converted.length}.json`;
+      const accounts = converted.map((item) => toSub2apiAccount(item.token, options));
+      return {
+        filename,
+        data: buildSub2apiFile(accounts, options.now || new Date()),
+        count: converted.length,
+        skipped,
+      };
+    }
+
+    function convert() {
+      const options = getOptions();
+      const sources = collectInputSources();
+      const result = convertSources(sources, options);
+      return buildOutput(result.converted, result.skipped, result.options);
+    }
+
+    function cpaOutputText(files) {
+      return `${files.map((file, index) => [
+        `// ${index + 1}. ${file.filename}`,
+        JSON.stringify(file.data, null, 2),
+      ].join('\n')).join('\n\n')}\n`;
+    }
+
+    function renderSub2apiPreview(data) {
+      const textarea = document.createElement('textarea');
+      textarea.className = 'output-textarea';
+      textarea.spellcheck = false;
+      textarea.readOnly = true;
+      textarea.value = `${JSON.stringify(data, null, 2)}\n`;
+      output.append(textarea);
+      return textarea.value;
+    }
+
+    function renderCpaPreview(files) {
+      const list = document.createElement('div');
+      list.className = 'preview-list';
+
+      files.forEach((file) => {
+        const item = document.createElement('div');
+        const filename = document.createElement('div');
+        const body = document.createElement('textarea');
+
+        item.className = 'preview-item';
+        filename.className = 'preview-filename';
+        filename.textContent = file.filename;
+        body.className = 'preview-file-body';
+        body.spellcheck = false;
+        body.readOnly = true;
+        body.value = `${JSON.stringify(file.data, null, 2)}\n`;
+        item.append(filename, body);
+        list.append(item);
+      });
+
+      output.append(list);
+      return cpaOutputText(files);
+    }
+
+    function renderResult(result) {
+      latestResult = result;
+      filenameView.textContent = result.filename;
+      output.textContent = '';
+      latestOutputText = result.files
+        ? renderCpaPreview(result.files)
+        : renderSub2apiPreview(result.data);
+      const skipped = result.skipped?.length ? `，跳过 ${result.skipped.length} 项` : '';
+      setStatus(`生成成功：${result.count || 1} 个账号${skipped}。`);
+    }
+
+    function renderConvertError(error) {
+      output.textContent = '';
+      filenameView.textContent = '生成失败';
+      latestResult = null;
+      latestOutputText = '';
+      setStatus(error.message, true);
+    }
+
+    function runAutoConvert({ silentEmpty = false } = {}) {
+      try {
+        renderResult(convert());
+      } catch (error) {
+        if (silentEmpty && error.message === '请先输入 JSON。') {
+          output.textContent = '';
+          filenameView.textContent = '等待生成';
+          latestResult = null;
+          latestOutputText = '';
+          setStatus('');
+          return;
+        }
+
+        renderConvertError(error);
+      }
+    }
+
+    function scheduleAutoConvert() {
+      window.clearTimeout(autoConvertTimer);
+      autoConvertTimer = window.setTimeout(() => runAutoConvert({ silentEmpty: true }), 250);
+    }
+
+    clearButton.addEventListener('click', () => {
+      resetSourceInputs();
+      output.textContent = '';
+      filenameView.textContent = '等待生成';
+      latestResult = null;
+      latestOutputText = '';
+      setStatus('');
+    });
+
+    addSourceButton.addEventListener('click', () => {
+      addSourceInput('', 'start').focus();
+    });
+
+    document.querySelectorAll('input[name="format"]').forEach((input) => {
+      input.addEventListener('change', () => runAutoConvert({ silentEmpty: true }));
+    });
+
+    [keepPlusTag, autoPause, concurrency, priority, rateMultiplier, models].forEach((input) => {
+      input.addEventListener('input', scheduleAutoConvert);
+      input.addEventListener('change', () => runAutoConvert({ silentEmpty: true }));
+    });
+
+    copyButton.addEventListener('click', async () => {
+      if (!latestOutputText) {
+        setStatus('没有可复制的内容。', true);
+        return;
+      }
+
+      await navigator.clipboard.writeText(latestOutputText);
+      setStatus('已复制。');
+    });
+
+    downloadButton.addEventListener('click', () => {
+      if (!latestResult || !latestOutputText) {
+        setStatus('没有可下载的内容。', true);
+        return;
+      }
+
+      if (latestResult.files) {
+        latestResult.files.forEach((file) => {
+          downloadJson(file.filename, `${JSON.stringify(file.data, null, 2)}\n`);
+        });
+        setStatus(`已开始下载 ${latestResult.files.length} 个 CPA JSON 文件。`);
+        return;
+      }
+
+      downloadJson(latestResult.filename, latestOutputText);
+      setStatus('已开始下载。');
+    });
+
+    function downloadJson(filename, content) {
+      const blob = new Blob([content], { type: 'application/json;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename || 'sub2api-accounts.json';
+      document.body.append(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    fileInput.addEventListener('change', async () => {
+      const files = Array.from(fileInput.files || []);
+
+      if (files.length === 0) {
+        return;
+      }
+
+      try {
+        const documents = await Promise.all(files.map(async (file) => {
+          const text = await file.text();
+          return JSON.parse(text);
+        }));
+        addDocumentsToInputs(documents);
+        runAutoConvert();
+      } catch (error) {
+        renderConvertError(error);
+      } finally {
+        fileInput.value = '';
+      }
+    });
+
+    resetSourceInputs();
+  </script>
+</body>
+</html>
